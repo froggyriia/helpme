@@ -3,7 +3,11 @@ import logging
 from env import TOKEN
 from aiogram.types import Message
 
+<<<<<<< HEAD
 token = TOKEN #вставить сюда свой токен
+=======
+token = TOKEN
+>>>>>>> origin/main
 
 logging.basicConfig(level=logging.INFO)
 
