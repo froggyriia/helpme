@@ -79,7 +79,7 @@ async def take_bounds(message: types.Message, state: FSMContext):
     data = await state.get_data()
     await message.reply(
         f"Your formula is {data['formula']} \nYour bounds are {data['bounds']}\nYour estimation is {data['estimation']}")
-    # await state.set_state("ready_to_make")
+    await state.set_state("ready_to_make")
     img = plot_formula(data['formula'], data['bounds'], data['estimation'])
     await message.answer_photo(img)
     img.close()
