@@ -86,6 +86,7 @@ async def take_bounds(message: types.Message, state: FSMContext):
 
 
 
+
 # @dp.message_handler("ready_to_make")
 # async def the_graph(message: Message, state: FSMContext):
 #     data = await state.get_data()
