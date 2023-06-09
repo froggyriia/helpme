@@ -6,10 +6,15 @@ from aiogram.types import Message
 from numexpr import evaluate
 import numpy as np
 import matplotlib.pyplot as plt
+from aiogram.contrib.fsm_storage.memory import MemoryStorage
+from aiogram.dispatcher import FSMContext
+from aiogram.dispatcher.filters.state import State, StatesGroup
+
 matplotlib.use("Agg")
 import io
 from PIL import Image
 import io
+
 plt.ioff()
 pi = np.pi
 e = np.e
@@ -19,7 +24,7 @@ token = TOKEN  # вставить сюда свой токен
 logging.basicConfig(level=logging.INFO)
 
 bot = Bot(token)
-dp = Dispatcher(bot)  # осдержит все обработчике и ответчики
+dp = Dispatcher(bot, storage=MemoryStorage())  # осдержит все обработчике и ответчики
 
 
 def fig2buf(fig):
@@ -29,8 +34,8 @@ def fig2buf(fig):
     return buf
 
 
-def plot_formula(formula: str, bounds: tuple[float, float], estimations: int):
-    x = np.linspace(*bounds, estimations)
+def plot_formula(formula: str, bounds: tuple[float, float], estimation: int):
+    x = np.linspace(*bounds, estimation)
     y = evaluate(formula)
     fig, ax = plt.subplots()
     ax.grid()
@@ -41,19 +46,52 @@ def plot_formula(formula: str, bounds: tuple[float, float], estimations: int):
     return img
 
 
-@dp.message_handler(commands=['start', 'help'])  # содержит команды на которые он будет отвечать
-async def _(message: types.Message):
+@dp.message_handler(commands=['start', 'help'], state='*')  # содержит команды на которые он будет отвечать
+async def _(message: types.Message, state: FSMContext):
     # old style:
     # await bot.send_message(message.chat.id, message.text)
 
-    await message.reply("Hi! \nI'm a meow_catty_bot!")
+    await message.reply("Hi! \nI'm a meow_catty_bot!\nSend me the formula")
+    await state.set_state("waiting_formula")
 
 
-@dp.message_handler()
-async def _(message: Message):
-    img = plot_formula(message.text, (-5, 5), 100) # FSM
+@dp.message_handler(state='waiting_formula')
+async def take_formula(message: types.Message, state: FSMContext):
+    formula = message.text
+    await state.update_data({'formula': formula})
+    await message.reply(f"Your formula is {formula} \n Send me the bounds\nFrmt: a, b")
+    await state.set_state("waiting_bounds")
+
+
+@dp.message_handler(state='waiting_bounds')
+async def take_bounds(message: types.Message, state: FSMContext):
+    bounds = tuple(map(int, message.text.split(', ')))
+    await state.update_data({'bounds': bounds})
+    data = await state.get_data()
+    await message.reply(f"Your formula is {data['formula']} \nYour bounds are {data['bounds']}\nSend me estimation")
+    await state.set_state("waiting_estimation")
+
+
+@dp.message_handler(state='waiting_estimation')
+async def take_bounds(message: types.Message, state: FSMContext):
+    estimation = int(message.text)
+    await state.update_data({'estimation': estimation})
+    data = await state.get_data()
+    await message.reply(
+        f"Your formula is {data['formula']} \nYour bounds are {data['bounds']}\nYour estimation is {data['estimation']}")
+    # await state.set_state("ready_to_make")
+    img = plot_formula(data['formula'], data['bounds'], data['estimation'])
     await message.answer_photo(img)
     img.close()
+
+
+
+# @dp.message_handler("ready_to_make")
+# async def the_graph(message: Message, state: FSMContext):
+#     data = await state.get_data()
+#     img = plot_formula(data['formula'], data['bounds'], data['estimation'])  # FSM
+#     await message.answer_photo(img)
+#     img.close()
 
 
 if __name__ == '__main__':
