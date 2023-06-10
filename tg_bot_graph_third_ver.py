@@ -4,6 +4,7 @@ import logging
 from env import TOKEN
 from aiogram.types import Message
 from numexpr import evaluate
+from numpy import tan, cos, sin
 import numpy as np
 import matplotlib.pyplot as plt
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
@@ -19,6 +20,11 @@ plt.ioff()
 pi = np.pi
 e = np.e
 
+
+def cotan(x):
+    return cos(x) / sin(x)
+
+
 token = TOKEN  # вставить сюда свой токен
 
 logging.basicConfig(level=logging.INFO)
@@ -26,6 +32,7 @@ logging.basicConfig(level=logging.INFO)
 bot = Bot(token)
 dp = Dispatcher(bot, storage=MemoryStorage())  # осдержит все обработчике и ответчики
 
+TOO_BIG_DIFFERENTIAL = 100
 
 def fig2buf(fig):
     buf = io.BytesIO()
@@ -36,8 +43,13 @@ def fig2buf(fig):
 
 def plot_formula(formula: str, bounds: tuple[float, float], estimation: int):
     x = np.linspace(*bounds, estimation)
+    formula = formula.replace("cotan(x)", "(cos(x)/sin(x))")
     y = evaluate(formula)
+    print(y)
+    y[:-1][np.abs(np.diff(y)) > TOO_BIG_DIFFERENTIAL] = np.nan
+
     fig, ax = plt.subplots()
+    ax.set_xbound(*bounds)
     ax.grid()
     ax.axis()
     ax.plot(x, y, label=formula)
@@ -84,11 +96,8 @@ async def take_bounds(message: types.Message, state: FSMContext):
     # await message.answer_photo(img)
     # img.close()
     img = await the_graph(state)
-    await  message.answer_photo(img)
+    await message.answer_photo(img)
     img.close()
-
-
-
 
 
 async def the_graph(state: FSMContext):
