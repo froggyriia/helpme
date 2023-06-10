@@ -1,7 +1,7 @@
 from aiogram import Bot, Dispatcher, executor, types
 from env import TOKEN2
 import logging
-from keyboards import keyboard, keyboard2, inlinekeyboard
+from keyboards import keyboard, keyboard2
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
 from aiogram.dispatcher import FSMContext
 from aiogram.types import Message
@@ -19,8 +19,7 @@ bot = Bot(token=TOKEN)
 dp = Dispatcher(bot, storage=MemoryStorage())
 
 all_users = set()
-connected_users = set()  # вычитать connected_users из all_users чтобы не было проблем при нескольких пользователях
-
+connected_users = set() #вычитать connected_users из all_users чтобы не было проблем при нескольких пользователях
 
 @dp.message_handler(commands=['start', 'help'], state='*')  # '*' - принимаем любое состояние на вход
 async def send_welcome(message: types.Message, state: FSMContext):
@@ -28,7 +27,7 @@ async def send_welcome(message: types.Message, state: FSMContext):
     This handler will be called when user sends `/start` or `/help` command
     """
 
-    await message.reply("Hi!\nI'm EchoBot!\nSay ur name", reply_markup=inlinekeyboard)
+    await message.reply("Hi!\nI'm EchoBot!\nSay ur name", reply_markup=keyboard2)
     await state.set_state('q1')  # изменение состояния
 
 
@@ -62,11 +61,10 @@ async def echo(message: Message, state: FSMContext):
     await message.answer(f'@{message.from_user.username}: waiting', reply_markup=ReplyKeyboardRemove())
     user_id = message.from_user.id
 
-    for user in all_users:
+    for user in connected_users:
         if user == user_id:
-            if len(all_users) > 1:
-                # targets = set(all_users) - set(connected_users) - {message.from_user.id}
-                targets = set(connected_users) - {message.from_user.id}
+            if len(connected_users) > 1:
+                targets = set(connected_users) - {message.from_user.id }
 
                 await bot.send_message(user, f'waiting users: {targets}')
                 await bot.send_message(user, f"to select user enter his id")
@@ -76,7 +74,8 @@ async def echo(message: Message, state: FSMContext):
                 await bot.send_message(user, f"waiting users: there's no connected users now, please wait,"
                                              f"\nfor reload user enter cmd find again")
 
-        await bot.send_message(user, f'new user is here! send cmd find to see id')
+        else:
+            await bot.send_message(user, f'new user is here! send cmd find to see id')
     # user2_id = choice(tuple(connected_users - {message.from_user.id}))
     # # await message.answer(f"{user2_id}")
     #
@@ -91,11 +90,9 @@ async def echo(message: Message, state: FSMContext):
         user_id = message.from_user.id
 
         target = int(message.text)
-        targets = set(all_users) - {message.from_user.id, }
+        targets = set(connected_users) - {message.from_user.id, }
         if target in targets:
             target_state: FSMContext = dp.current_state(chat=target, user=target)
-            # connected_users.add(target)
-            # connected_users.add(user_id)
             await message.answer(f"Вы связаны с {target_state.user}")
             await bot.send_message(target, f"Вы связаны с {user_id}")
             await state.set_state("chat")
