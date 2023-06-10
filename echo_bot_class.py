@@ -47,7 +47,7 @@ async def process_age(message: types.Message, state: FSMContext):
             await state.update_data({"age": int(age)})
             await state.set_state('echo')
             await message.answer('now i know ur name and age')
-            all_users.add(message.from_user.id)
+            connected_users.add(message.from_user.id)
         elif int(age) < 18:
             await state.set_state('bye')
             await message.answer("sorry, i don't work with kids")
@@ -64,7 +64,7 @@ async def echo(message: Message, state: FSMContext):
     for user in connected_users:
         if user == user_id:
             if len(connected_users) > 1:
-                targets = set(connected_users) - {message.from_user.id }
+                targets = set(connected_users) - {message.from_user.id, }
 
                 await bot.send_message(user, f'waiting users: {targets}')
                 await bot.send_message(user, f"to select user enter his id")
@@ -88,7 +88,6 @@ async def echo(message: Message, state: FSMContext):
 async def echo(message: Message, state: FSMContext):
     if message.text.isdigit():
         user_id = message.from_user.id
-
         target = int(message.text)
         targets = set(connected_users) - {message.from_user.id, }
         if target in targets:
