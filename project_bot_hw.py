@@ -13,7 +13,7 @@ from mw_keyboard import inlineKeyboardGreeting, inlineKeyboardWeekSchedule, week
 # @dataclass
 # class Schedule:
 #     ...
-
+schedule_dict: dict = {}
 
 logging.basicConfig(level=logging.INFO)
 

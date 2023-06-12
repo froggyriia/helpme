@@ -1,7 +1,7 @@
 from aiogram import Bot, Dispatcher, executor, types
 from env import TOKEN2
 import logging
-from keyboards import keyboard, keyboard2
+from keyboards import keyboard, keyboard2, inlinekeyboard
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
 from aiogram.dispatcher import FSMContext
 from aiogram.types import Message
@@ -27,7 +27,7 @@ async def send_welcome(message: types.Message, state: FSMContext):
     This handler will be called when user sends `/start` or `/help` command
     """
 
-    await message.reply("Hi!\nI'm EchoBot!\nSay ur name", reply_markup=keyboard2)
+    await message.reply("Hi!\nI'm EchoBot!\nSay ur name")
     await state.set_state('q1')  # изменение состояния
 
 
@@ -116,6 +116,7 @@ async def echo(message: Message, state: FSMContext):
 @dp.message_handler(state='bye')
 async def echo(message: Message, state: FSMContext):
     await message.answer('bye')
+
 
 
 if __name__ == '__main__':
